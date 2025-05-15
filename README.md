@@ -20,8 +20,8 @@ Mirror Mirror is an interactive AI-powered web application designed to help user
 
 ### **1. Clone the Repository**
 ```
-git clone https://github.com/GraceC-339/Mirror-Mirror.git
-cd Mirror-Mirror
+git clone https://github.com/GraceC-339/Mirror.git
+cd Mirror
 ```
 
 ### **2. Backend Setup**
