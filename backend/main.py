@@ -3,11 +3,12 @@ import asyncio
 from fastapi import FastAPI, HTTPException, File, UploadFile
 from uuid import uuid4
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from langchain_openai import AzureChatOpenAI
 from dotenv import load_dotenv
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 import os
+from functools import lru_cache
 
 # Load environment variables from .env file
 load_dotenv()
@@ -25,7 +26,8 @@ app.add_middleware(
 )
 
 # Directory for storing selfies
-SELFIE_DIR = "selfies"
+# Ensure the selfies directory exists and is writable
+SELFIE_DIR = os.path.join(os.path.dirname(__file__), "selfies")
 os.makedirs(SELFIE_DIR, exist_ok=True)
 
 
