@@ -3,12 +3,11 @@ import asyncio
 from fastapi import FastAPI, HTTPException, File, UploadFile
 from uuid import uuid4
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from langchain_openai import AzureChatOpenAI
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 import os
-from functools import lru_cache
 
 # Load environment variables from .env file
 load_dotenv()
@@ -31,10 +30,10 @@ SELFIE_DIR = os.path.join(os.path.dirname(__file__), "selfies")
 os.makedirs(SELFIE_DIR, exist_ok=True)
 
 
-# Initialize AzureChatOpenAI
+# Initialize AzureChatOpenAI from environment variables
 llm = AzureChatOpenAI(
-    azure_deployment="grace-first-project-gpt-4",
-    api_version="2024-10-21",
+    azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "grace-first-project-gpt-4"),
+    api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21"),
 )
 
 # Define the UserInput class
@@ -104,19 +103,21 @@ async def generate_affirmation(input: UserInput):
 def read_root():
     return {"message": "Welcome to Mirror, Mirror API"}
 
-# Endpoint to handle selfie functionality (placeholder)
+# Endpoint to handle selfie functionality
 @app.post("/take-selfie")
 async def take_selfie(photo: UploadFile = File(...)):
     try:
-        # Generate a unique filename
-        filename = f"{uuid4().hex}_{photo.filename}"
+        # Sanitize filename to prevent directory traversal
+        safe_name = os.path.basename(photo.filename or "selfie.png")
+        filename = f"{uuid4().hex}_{safe_name}"
         filepath = os.path.join(SELFIE_DIR, filename)
 
         # Save the photo to the selfies directory
+        content = await photo.read()
         with open(filepath, "wb") as f:
-            f.write(await photo.read())
+            f.write(content)
 
-        return {"message": "Selfie saved successfully!", "file_path": filepath}
+        return {"message": "Selfie saved successfully!", "file_id": filename}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving selfie: {str(e)}")
 
